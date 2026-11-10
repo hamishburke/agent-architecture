@@ -1,52 +1,71 @@
 # agent-architecture
 
-The architecture this side runs on, written so another agent on another machine can match it
-without a conversation.
+An architecture, written down as something a machine can check — so "are we aligned?" is a
+command instead of a message.
 
-Hamish owns the direction. This repository is the artefact that makes "is the other side up to
-date?" a command rather than a message: a map of the system, a profile of the decisions that
-matter, and a checker that runs on whichever machine has to match.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.svg">
+  <img alt="Eleven layers — host, harness, models, character, facts, procedure, sessions, board, jobs, phone, posture — and the four joins between them" src="docs/architecture-light.svg">
+</picture>
 
-## Start here
+## What it is
+
+One host running an agent: eleven layers, and four places where they have to agree. The picture
+is generated from [`architecture.json`](architecture.json) — one file saying what exists and what
+talks to what, with the joins written out rather than drawn as spaghetti.
+
+[`sync/profile.json`](sync/profile.json) is the half that can be wrong: ten decisions, each with
+the check that runs on the machine which has to match. [`sync/align.py`](sync/align.py) runs them
+and answers aligned / drift / unknown. No dependencies, no network, no writes.
 
 ```sh
-git clone <this repo> && cd agent-architecture
-python3 sync/align.py check      # aligned / drift / unknown / n/a, one line per item
-python3 sync/align.py report     # the same, as markdown for a board record
-python3 sync/align.py explain <id>
+git clone https://github.com/Slaymish/agent-architecture && cd agent-architecture
+python3 sync/align.py check
 ```
 
-No dependencies, no network, no writes. Exit 0 = everything checkable is aligned, 1 = drift,
-2 = nothing drifted but something could not be checked. **Unknown is never a pass.**
+Exit `0` means everything checkable matches, `1` means something drifted, `2` means something
+could not be checked — and unknown is never a pass, because a check that cannot run is an item
+nobody knows about. `python3 sync/align.py report` prints a table; `explain <id>` gives the
+reasoning behind an item.
 
-## What is here
+## Use it for your own machine
+
+This is a starter, not a product: the structure is generic, the content is what happened to be
+true on one machine. Paste this into a Hermes chat:
+
+```
+Clone https://github.com/Slaymish/agent-architecture and adopt it for this machine.
+
+1. Run `python3 sync/align.py check` first and show me the output unchanged. Don't fix anything yet.
+2. For each item that drifts, tell me in one line what it is, what this machine does instead, and
+   whether changing it is reversible. Wait for me before touching my config.
+3. Write architecture.json for this machine: read the actual config, services, jobs and stores, and
+   describe what is really here rather than what the upstream file says.
+4. Run `python3 scripts/diagram.py` and show me the diagram you produced.
+5. Tell me which items you can honestly satisfy, and which you think are wrong for this machine.
+   Disagreement is welcome; silence is not.
+```
+
+It is expected to disagree with you. Several items are opinions about how an agent should be run,
+and a check is only as good as the reason beside it.
+
+## What is where
 
 | Path | Holds |
 |---|---|
-| `MAP.md` | The system as measured: eleven layers, the four joins between them, and what is deliberately absent |
-| `sync/profile.json` | One item per decision: what it is, why it exists, the check that runs on the machine, the step that fixes it |
-| `sync/align.py` | The checker. stdlib only |
-| `sync/versions.json` | Which revision of each sibling repository this side is pinned to |
-| `sync/README.md` | The contract: what drift means, what v1 does not do |
-| `design/` | Designs written from 11 Nov 2026 onward. Older ones stay in the log repository, which keeps their history and the links to them |
+| `MAP.md` | The system as measured — the eleven layers in prose, and why each join matters |
+| `architecture.json` | The definition the picture is drawn from. Edit this, never the SVG |
+| `scripts/diagram.py` | Renders both themes; `--validate` for CI, `--check` for staleness |
+| `sync/profile.json` | One item per decision: why, the check, and the fix |
+| `sync/align.py` | The checker |
+| `sync/versions.json` | Which revision of each sibling this side is pinned to |
+| `design/` | Designs from 11 Nov 2026 onward. Older ones stay in the log repository, which keeps their history and the links to them |
 
-## What is deliberately *not* here
-
-- **The board log.** It is a private repository holding the record history; it is cloned
-  separately and pointed at, never vendored here. Visibility differs, and a copy would drift.
-- **Facts about a person.** Memory content, plans, household context and anything with an
-  address, an account or a name in it stays in the private store. This repo carries the
-  mechanism and the measurements.
-- **Secrets.** Ever. A token in a public repo is a token in a commit.
-
-## Why not submodules
-
-The obvious shape — this repo as a parent, the pieces as submodules — was considered and
-rejected. A submodule pins a commit, so the parent reports "up to date" while the piece inside
-it is three commits behind: exactly the silent drift this repository exists to remove. Cloning
-also stops being one command on a machine that has to run it unattended. Siblings are pinned by
-`sync/versions.json`, which is a file a checker can read and diff, instead of git plumbing a
-person has to remember.
+The board log lives in a separate, private repository and is deliberately not vendored here.
+Siblings are pinned in `sync/versions.json` rather than as submodules: a pinned submodule lets a
+parent claim "up to date" while the piece inside it is behind, which is the exact drift this
+repository exists to remove. Nothing about a person — an address, an account, a name — belongs
+here either; this repo carries mechanism and measurements.
 
 ## The rule for the other side
 

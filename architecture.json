@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "title": "The architecture",
+  "subtitle": "Eleven layers on one host, and the four joins where they have to agree.",
+  "note": "Structure only: what exists and what talks to what. Whether a given machine matches is what sync/align.py answers. Edit this file and the diagram follows; never edit the generated SVG.",
+  "lanes": [
+    {"id": "host", "label": "Host", "blurb": "one headless machine"},
+    {"id": "harness", "label": "Harness", "blurb": "turns, tools, hooks"},
+    {"id": "models", "label": "Models", "blurb": "pinned, plus local"},
+    {"id": "character", "label": "Character", "blurb": "conduct and voice"},
+    {"id": "facts", "label": "Facts", "blurb": "dated, sourced, expiring"},
+    {"id": "procedure", "label": "Procedure", "blurb": "skills, loaded on demand"},
+    {"id": "sessions", "label": "Sessions", "blurb": "many processes, one disk"},
+    {"id": "board", "label": "Board", "blurb": "an append-only log"},
+    {"id": "jobs", "label": "Jobs", "blurb": "scheduled, and gated"},
+    {"id": "phone", "label": "Phone", "blurb": "where he actually is"},
+    {"id": "posture", "label": "Posture", "blurb": "who reads it, recovery"}
+  ],
+  "nodes": [
+    {"id": "machine", "lane": "host", "title": "fedora", "sub": "Fedora 44 · 8 threads · 15 GiB"},
+    {"id": "units", "lane": "host", "title": "17 user services", "sub": "systemd · linger on"},
+
+    {"id": "hermes", "lane": "harness", "title": "Hermes agent", "sub": "turns, tools, sessions, cron"},
+    {"id": "hooks", "lane": "harness", "title": "Hooks", "sub": "5 events · fail-open"},
+    {"id": "config", "lane": "harness", "title": "config.yaml", "sub": "the pin: model, hooks, auth"},
+
+    {"id": "cloud", "lane": "models", "title": "deepseek-flash", "sub": "default, pinned"},
+    {"id": "codex", "lane": "models", "title": "Codex", "sub": "delegated coding"},
+    {"id": "local", "lane": "models", "title": "llama-swap", "sub": "4 models · stay on host"},
+
+    {"id": "soul", "lane": "character", "title": "SOUL.md", "sub": "voice and conduct · no facts"},
+
+    {"id": "memory", "lane": "facts", "title": "123 records", "sub": "one claim each · 5 fields"},
+    {"id": "kb", "lane": "facts", "title": "20,217 sections", "sub": "bm25 + vectors"},
+    {"id": "recall", "lane": "facts", "title": "Recall hook", "sub": "search before speaking"},
+
+    {"id": "skills", "lane": "procedure", "title": "159 skills", "sub": "loaded when the task matches"},
+
+    {"id": "peerctl", "lane": "sessions", "title": "peerctl", "sub": "claims and work slips"},
+    {"id": "subagents", "lane": "sessions", "title": "Subagents", "sub": "live sessions, own claims"},
+
+    {"id": "log", "lane": "board", "title": "the log", "sub": "577 records · a file each"},
+    {"id": "transport", "lane": "board", "title": "git · 60 s poll", "sub": "no server, no port"},
+
+    {"id": "cron", "lane": "jobs", "title": "74 jobs", "sub": "61 enabled"},
+    {"id": "gates", "lane": "jobs", "title": "8 monitor scripts", "sub": "a quiet tick is free"},
+
+    {"id": "conduit", "lane": "phone", "title": "Conduit", "sub": "push, chat, voice, cards"},
+    {"id": "voice", "lane": "phone", "title": "Speech", "sub": "cloud STT, Gemini voice"},
+
+    {"id": "auth", "lane": "posture", "title": "Basic auth", "sub": "anything published"},
+    {"id": "archive", "lane": "posture", "title": "Offsite archive", "sub": "the only copy off-host"}
+  ],
+  "joins": [
+    {"from": "hermes", "to": "peerctl", "label": "who else is writing"},
+    {"from": "recall", "to": "memory", "label": "retrieve, then answer"},
+    {"from": "transport", "to": "conduit", "label": "delivered, or it isn't"},
+    {"from": "gates", "to": "cron", "label": "pay only when it changed"}
+  ]
+}

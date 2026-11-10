@@ -1,0 +1,41 @@
+name: diagram
+
+on:
+  push:
+    paths:
+      - architecture.json
+      - scripts/diagram.py
+      - sync/profile.json
+      - .github/workflows/diagram.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Validate the definition
+        run: python3 scripts/diagram.py --validate
+
+      - name: Render both themes
+        run: python3 scripts/diagram.py --out docs
+
+      - name: Commit if the picture changed
+        run: |
+          if git diff --quiet -- docs; then
+            echo "diagram already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs
+          git commit -m "docs: regenerate the diagram [skip ci]"
+          git push
