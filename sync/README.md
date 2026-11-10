@@ -42,6 +42,9 @@ Copy the shape of an existing one. Four fields do the work:
 - `compare` — `equals`, `regex`, `gte`, `nonempty` or `exit0`. `gte` parses the last line as an
   integer; anything unparseable is `unknown`, not zero.
 - `fix` — the step, in one or two sentences. It is prose on purpose in v1.
+- `requires` — the one file whose absence explains the usual `unknown`. It is checked first and
+  reported as `not present: <path>`, because "exited 1 with nothing to read" sends a reader to
+  the shell to work out what the check wanted.
 
 Every item must be run on a machine where it *should* fail at least once, or the check proves
 nothing. The first run of this profile found one drift that was the check's own bug, which is

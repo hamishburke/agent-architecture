@@ -57,6 +57,12 @@ def run(sh: str) -> tuple[int, str, str]:
     return p.returncode, p.stdout.strip(), p.stderr.strip()
 
 
+def expand(path: str) -> str:
+    for key, value in env().items():
+        path = path.replace("$" + key, value)
+    return str(Path(path).expanduser())
+
+
 def classify(item: dict) -> tuple[str, str]:
     """Return (status, observed). Observed is what the machine actually said."""
     if platform_tag() not in item.get("applies_to", ["linux", "darwin"]):
@@ -66,9 +72,22 @@ def classify(item: dict) -> tuple[str, str]:
     if not check:
         return UNKNOWN, "no check yet"
 
+    # `requires` names the one file whose absence explains most unknowns, so the reader gets a
+    # path rather than "exited 1 with nothing to read". Absence is not drift: there is nothing
+    # there to differ.
+    requires = item.get("requires")
+    if requires and not Path(expand(requires)).exists():
+        return UNKNOWN, "not present: %s" % expand(requires)
+
     rc, out, err = run(check["sh"])
-    if rc == 124 or rc == 126:
+    if rc in (124, 126):
         return UNKNOWN, err or ("exit %d" % rc)
+    if rc != 0 and not out:
+        # Nothing to read is not a measurement. A missing config, store or directory means the
+        # item cannot be checked on this machine, and reporting that as drift would send a
+        # reader to change something that is not there. Drift is a value that differs.
+        tail = (": " + err.splitlines()[0][:100]) if err else ""
+        return UNKNOWN, "check exited %d with nothing to read%s" % (rc, tail)
 
     mode = check.get("compare")
     want = check.get("value")
