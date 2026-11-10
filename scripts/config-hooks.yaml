@@ -1,0 +1,39 @@
+# The hook wiring peerctl needs, to be merged into ~/.hermes/config.yaml.
+#
+# Replace /home/hamishburke with your own home directory: hook commands are run as
+# subprocesses with no shell profile, so a bare `~` or `$HOME` is not expanded here.
+#
+# Four events, and each one earns its place:
+#   on_session_start   registers the session and garbage-collects dead ones
+#   pre_llm_call       beats the heartbeat, captures the goal on the first turn, and
+#                      injects what other live sessions are doing and have said
+#   pre_tool_call      blocks a write into a repo another live session has claimed
+#   on_session_finalize removes the session's record (on_session_end fires after every
+#                      turn, so it is not used: a session is not gone there)
+#
+# `fail_closed: false` is not optional. The hook is a guard, and a guard with a bug
+# must never wedge every tool call on the host. The cost is that a broken hook means no
+# protection, so it has to be tested rather than assumed.
+#
+# `hooks_auto_accept: true` is what makes any of this run in an unattended context.
+# Without it the first use of a hook waits for a yes from a human who is not there (the
+# gateway, the desktop app and cron never answer), and every hook is silently skipped
+# with one log line.
+
+hooks_auto_accept: true
+
+hooks:
+  on_session_start:
+    - command: "/usr/bin/python3 /home/hamishburke/.hermes/scripts/peerctl.py hook"
+      timeout: 15
+  pre_llm_call:
+    - command: "/usr/bin/python3 /home/hamishburke/.hermes/scripts/peerctl.py hook"
+      timeout: 15
+  pre_tool_call:
+    - matcher: "write_file|patch|terminal"
+      command: "/usr/bin/python3 /home/hamishburke/.hermes/scripts/peerctl.py hook"
+      timeout: 15
+      fail_closed: false
+  on_session_finalize:
+    - command: "/usr/bin/python3 /home/hamishburke/.hermes/scripts/peerctl.py hook"
+      timeout: 15
