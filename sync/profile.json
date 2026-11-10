@@ -4,8 +4,21 @@
   "updated": "2026-11-10",
   "what_this_is": "The list of things Zeta is expected to match. One item per decision, each with a check that runs on its own machine. Drift is not a fault, it is a question: apply, or answer why not.",
   "conventions": {
-    "layers": ["runtime", "sessions", "memory", "board", "jobs", "security", "host"],
-    "statuses": ["aligned", "drift", "unknown", "n/a"],
+    "layers": [
+      "runtime",
+      "sessions",
+      "memory",
+      "board",
+      "jobs",
+      "security",
+      "host"
+    ],
+    "statuses": [
+      "aligned",
+      "drift",
+      "unknown",
+      "n/a"
+    ],
     "unknown_means": "the check could not run or could not be read. Never read unknown as aligned.",
     "variables": {
       "HERMES_HOME": "${HERMES_HOME:-$HOME/.hermes}",
@@ -19,7 +32,10 @@
       "title": "The model is the one we chose, in the config, not the harness default",
       "why": "A default model changes under you on an upgrade. The pin is what makes a run reproducible.",
       "since": "2026-11-10",
-      "applies_to": ["linux", "darwin"],
+      "applies_to": [
+        "linux",
+        "darwin"
+      ],
       "check": {
         "sh": "awk '/^model:[[:space:]]*$/{f=1;next} f&&/^[^[:space:]]/{exit} f&&/^[[:space:]]+default:/{print $2;exit}' \"$HERMES_HOME/config.yaml\"",
         "compare": "regex",
@@ -33,7 +49,10 @@
       "title": "Hooks run without a prompt",
       "why": "The gateway, desktop app and cron never answer a first-use prompt, so without this every hook is silently skipped with one log line.",
       "since": "2026-11-10",
-      "applies_to": ["linux", "darwin"],
+      "applies_to": [
+        "linux",
+        "darwin"
+      ],
       "check": {
         "sh": "grep -m1 '^hooks_auto_accept:' \"$HERMES_HOME/config.yaml\" | sed 's/.*: *//;s/ *$//'",
         "compare": "equals",
@@ -47,7 +66,10 @@
       "title": "Concurrent sessions are coordinated, not just co-resident",
       "why": "Hermes has no cross-session awareness: two sessions editing one repo means last writer wins and nobody notices. peerctl is the guard, wired as four hooks.",
       "since": "2026-11-10",
-      "applies_to": ["linux", "darwin"],
+      "applies_to": [
+        "linux",
+        "darwin"
+      ],
       "check": {
         "sh": "test -f \"$HERMES_HOME/scripts/peerctl.py\" && grep -c 'peerctl.py hook' \"$HERMES_HOME/config.yaml\"",
         "compare": "gte",
@@ -61,7 +83,10 @@
       "title": "The memory store has contracted records, and the index knows it",
       "why": "A record whose contract did not parse indexes, searches and reads fine while being classified as substrate, so the failure is silent.",
       "since": "2026-11-10",
-      "applies_to": ["linux", "darwin"],
+      "applies_to": [
+        "linux",
+        "darwin"
+      ],
       "check": {
         "sh": "sqlite3 \"$HERMES_HOME/data/kb/kb.sqlite3\" \"select count(*) from scope where evidence='contracted';\"",
         "compare": "gte",
@@ -75,7 +100,10 @@
       "title": "Retrieval runs before the answer, not after the apology",
       "why": "Measured failure: a record that was the top search hit was answered \"I don't remember\", because no search ran. A prompt line is a nudge; a hook is a gate.",
       "since": "2026-11-10",
-      "applies_to": ["linux", "darwin"],
+      "applies_to": [
+        "linux",
+        "darwin"
+      ],
       "check": {
         "sh": "grep -c 'recall.py hook' \"$HERMES_HOME/config.yaml\"",
         "compare": "gte",
@@ -89,7 +117,10 @@
       "title": "The board log passes its own verifier",
       "why": "Two independent readings of one format is the only useful test of it, and verify is the cheap one. A board that reads clean but verifies dirty is two boards.",
       "since": "2026-11-10",
-      "applies_to": ["linux", "darwin"],
+      "applies_to": [
+        "linux",
+        "darwin"
+      ],
       "check": {
         "sh": "cd \"$BOARD_LOG\" && python3 board/board.py verify >/dev/null 2>&1 && echo ok",
         "compare": "equals",
@@ -101,11 +132,14 @@
       "id": "board.delivery-alive",
       "layer": "board",
       "title": "Something is actually polling the board, and it says so",
-      "why": "A cursor only moves when a message exists, so a healthy watcher on a quiet board and a wedged one look identical. The heartbeat is the only difference.",
+      "why": "A cursor only moves when a message exists, so a healthy watcher on a quiet board and a wedged one look identical. The heartbeat is the only difference. Thirty minutes rather than fifteen: a boundary wide enough to survive one missed poll and a restart, and a drift line that still means the poller has stopped.",
       "since": "2026-11-10",
-      "applies_to": ["linux", "darwin"],
+      "applies_to": [
+        "linux",
+        "darwin"
+      ],
       "check": {
-        "sh": "find \"$HERMES_HOME/data/agent-board\" -name 'v2-watcher.heartbeat' -mmin -15 2>/dev/null | head -1",
+        "sh": "find \"$HERMES_HOME/data/agent-board\" -name 'v2-watcher.heartbeat' -mmin -30 2>/dev/null | head -1",
         "compare": "nonempty",
         "value": null
       },
@@ -117,7 +151,10 @@
       "title": "At least one scheduled job is gated by a monitor script",
       "why": "A job that wakes the model on a schedule pays for a turn whether or not anything changed. A monitor script makes a quiet period cost nothing.",
       "since": "2026-11-10",
-      "applies_to": ["linux", "darwin"],
+      "applies_to": [
+        "linux",
+        "darwin"
+      ],
       "check": {
         "sh": "python3 -c \"import json,sys;d=json.load(open('$HERMES_HOME/cron/jobs.json'));rows=d if isinstance(d,list) else d.get('jobs',[]);print(sum(1 for r in rows if r.get('monitor_script')))\"",
         "compare": "gte",
@@ -131,7 +168,10 @@
       "title": "Anything published has auth in front of it",
       "why": "The dashboard and the human channel are reachable from a phone away from home. Tailnet membership is not authentication.",
       "since": "2026-11-10",
-      "applies_to": ["linux", "darwin"],
+      "applies_to": [
+        "linux",
+        "darwin"
+      ],
       "check": {
         "sh": "grep -c 'basic_auth' \"$HERMES_HOME/config.yaml\"",
         "compare": "gte",
@@ -145,7 +185,10 @@
       "title": "The disk has room for the archive to grow",
       "why": "Every backup, index and session store fails in a way that is hard to read once the disk is full.",
       "since": "2026-11-10",
-      "applies_to": ["linux", "darwin"],
+      "applies_to": [
+        "linux",
+        "darwin"
+      ],
       "check": {
         "sh": "df -Pk \"$HOME\" | awk 'NR==2{print int($4/1024/1024)}'",
         "compare": "gte",
