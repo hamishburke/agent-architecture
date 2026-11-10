@@ -1,3 +1,8 @@
+# Renders the diagram from architecture.json and commits it when it changes.
+#
+# Belt to the local pre-commit hook's braces (.githooks/pre-commit covers the commit that
+# changed the definition; this covers anything that reaches main another way). Both exist
+# because the picture is generated and a stale picture reads as current.
 name: diagram
 
 on:

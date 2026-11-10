@@ -1,0 +1,20 @@
+#!/bin/sh
+# Keep the rendered diagram in step with the definition it is drawn from.
+#
+# The picture is generated, so a commit that changes architecture.json or the renderer and
+# forgets docs/ leaves the repository showing a shape that no longer exists. GitHub Actions
+# covers this from the other side; this covers it at the moment of the commit, which is the
+# only moment the author still knows what changed.
+set -eu
+cd "$(git rev-parse --show-toplevel)"
+
+staged=$(git diff --cached --name-only)
+case "$staged" in
+  *architecture.json*|*scripts/diagram.py*)
+    python3 scripts/diagram.py --validate >/dev/null
+    python3 scripts/diagram.py --out docs >/dev/null
+    git add docs
+    git diff --cached --quiet -- docs || echo "pre-commit: regenerated docs/ from architecture.json"
+    ;;
+esac
+exit 0

@@ -67,6 +67,11 @@ parent claim "up to date" while the piece inside it is behind, which is the exac
 repository exists to remove. Nothing about a person — an address, an account, a name — belongs
 here either; this repo carries mechanism and measurements.
 
+The diagram is generated, so it must never be edited by hand. If you are working on a clone of
+this repository, run `git config core.hooksPath .githooks` once: the pre-commit hook regenerates
+`docs/` whenever `architecture.json` or the renderer changes, and CI does the same for anything
+that arrives another way.
+
 ## The rule for the other side
 
 Its one job is staying aligned, not being brought up to date. So: pull, run `check`, and act —
