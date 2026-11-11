@@ -72,6 +72,11 @@ this repository, run `git config core.hooksPath .githooks` once: the pre-commit 
 `docs/` whenever `architecture.json` or the renderer changes, and CI does the same for anything
 that arrives another way.
 
+## Licence
+
+MIT, `Copyright (c) 2026 Hamish Burke`. Copy it, check your own machine against it, and publish
+what you learn — that is the point of a checker.
+
 ## The rule for the other side
 
 Its one job is staying aligned, not being brought up to date. So: pull, run `check`, and act —
